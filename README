@@ -1,0 +1,61 @@
+SagePay
+
+PHP class for interacting with SagePay.
+
+Example usage:
+
+<?php
+
+$sagepay = new SagePay('vendorid', 'live');
+
+if (SagePay::is3dResponse()) {
+	$sagepay = SagePay::recover3d();
+	$sagepay->complete3d();
+	// recover persistent data - see below
+	$basket = $sagepay->basket;
+}
+
+elseif ($_POST) {
+	
+	$sagepay->VendorTxCode = '000001';
+	$sagepay->Amount       = 10;
+	$sagepay->Currency     = 'GBP';
+	$sagepay->Description  = 'Basket Contents';
+
+	$sagepay->CardHolder   = 'Mr John Doe';
+	$sagepay->CardNumber   = '4929000000006';
+	...
+
+	foreach ($basket_contents as $line_item) {
+		$sagepay->addLine($line_item['name'], $line_item['quantity'], $line_item['value'], $line_item['tax']);
+	}
+	
+	$sagepay->register();
+	
+}
+	
+if ($sagepay->status() == 'OK') {
+	// The order has been completed.
+	echo "Payment complete. See details:\n";
+	print_r($sagepay->result);
+}
+
+elseif ($sagepay->status() == '3DAUTH') {
+	// Any data that needs to persist through 3DAUTH can be added to the object
+	$sagepay->basket = $basket;
+	
+	// POST to ACSURL - usually by outputting a auto-submitting form
+	?>
+	<form action="<?=$sagepay->result['ACSURL']?>" method="post">
+		<input type="hidden" name="PaReq" value="<?=$sagepay->result['$PaReq']?>" />
+		<input type="hidden" name="MD" value="<?=$sagepay->result['$MD']?>" />
+		<input type="hidden" name="TermUrl" value="http://full.path.to/this/page" />
+		<input type="submit" value="Continue to Card Verification" />
+	</form>
+	<?php
+}
+
+else {
+	echo "Errors:\n";
+	print_r($sagepay->result['Errors']);
+}
