@@ -1,9 +1,11 @@
 SagePay
+=======
 
 PHP class for interacting with SagePay Direct.
 
-Example usage:
+Usage example:
 
+```php
 <?php
 
 $sagepay = new SagePay('vendorid', 'live');
@@ -59,3 +61,4 @@ else {
 	echo "Errors:\n";
 	print_r($sagepay->result['Errors']);
 }
+```
