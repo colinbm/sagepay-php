@@ -249,8 +249,8 @@ class SagePay {
 		curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, 1); 
 		curl_setopt($curlSession, CURLOPT_TIMEOUT, 30); 
 		curl_setopt($curlSession, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curlSession, CURLOPT_SSL_VERIFYHOST, 1);	
-		$response = split(chr(10), curl_exec($curlSession));
+		curl_setopt($curlSession, CURLOPT_SSL_VERIFYHOST, 2);	
+		$response = explode(chr(10), curl_exec($curlSession));
 		if (curl_error($curlSession)){
 			$output['Status'] = "FAIL";
 			$output['StatusDetail'] = curl_error($curlSession);
