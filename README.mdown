@@ -49,7 +49,7 @@ elseif ($sagepay->status() == '3DAUTH') {
 	// POST to ACSURL - usually by outputting a auto-submitting form
 	?>
 	<form action="<?=$sagepay->result['ACSURL']?>" method="post">
-		<input type="hidden" name="PaReq" value="<?=$sagepay->result['PaReq']?>" />
+		<input type="hidden" name="PaReq" value="<?=$sagepay->result['PAReq']?>" />
 		<input type="hidden" name="MD" value="<?=$sagepay->result['MD']?>" />
 		<input type="hidden" name="TermUrl" value="http://full.path.to/this/page" />
 		<input type="submit" value="Continue to Card Verification" />
