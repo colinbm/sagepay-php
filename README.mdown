@@ -24,7 +24,10 @@ elseif ($_POST) {
 	 * to sage pay.
 	 **/
 
-	$sagepay->VendorTxCode = '000001';
+	// VendorTxCode must be a unique id on each submission,
+	// change 'sp' to whatever prefix you want.
+	$sagepay->VendorTxCode = uniqid('sp_');
+
 	$sagepay->Amount       = 10;
 	$sagepay->Currency     = 'GBP';
 	$sagepay->Description  = 'Basket Contents';
