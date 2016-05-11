@@ -1,16 +1,16 @@
 <?php
 
 class SagePay {
-	
+
 	private $urls;
 	private $Vendor;
 	private $Basket = array();
-	
+
 	public $AccountType    = 'E';
 	public $GiftAidPayment = 0;
 	public $ApplyAVSCV2    = 0;
 	public $Apply3DSecure  = 0;
-	
+
 	public $VendorTxCode;
 	public $Amount;
 	public $Currency;
@@ -41,11 +41,11 @@ class SagePay {
 	public $DeliveryState;
 	public $DeliveryPhone;
 	public $CustomerEmail;
-	
+
 	public $result = array('Status' => 'BEGIN');
-	
+
 	public function __construct($vendor='', $mode='test') {
-		
+
 		$sage_pay_urls = array(
 			'live' => array(
 				'register' => 'https://live.sagepay.com/gateway/service/vspdirect-register.vsp',
@@ -60,19 +60,19 @@ class SagePay {
 				'3dsecure' => 'https://test.sagepay.com/Simulator/VSPDirectCallback.asp'
 			)
 		);
-		
+
 		$this->urls = in_array($mode, array('live', 'test', 'simulator')) ? $sage_pay_urls[$mode] : $sage_pay_urls['test'];
-		
+
 		$this->Vendor = $vendor;
-			
+
 	}
-	
+
 	/*
 	 * Register the transaction with SagePay
 	 *
 	 */
 	public function register() {
-		
+
 		$errors                                                       = array();
 		if (!$this->Vendor)             $errors['Vendor']             = 'The Vendor must be provided';
 		if (!$this->VendorTxCode)       $errors['VendorTxCode']       = 'The Vendor must be provided';
@@ -101,12 +101,12 @@ class SagePay {
 		if (!$this->DeliveryCountry)    $errors['DeliveryCountry']    = 'DeliveryCountry must be specified.';
 		if ($this->DeliveryCountry == 'US' and !$this->DeliveryState) $errors['DeliveryState'] = 'DeliveryState mut be specified.';
 		if ($this->CustomerEmail and !preg_match("/^([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+\.([a-zA-Z0-9\._-]+)+$/", $this->CustomerEmail)) $errors['CustomerEmail'] = 'CustomerEmail is invalid.';
-		
+
 		if (count($errors)) {
 			$this->result = array('Status' => 'ERRORCHECKFAIL', 'Errors' => $errors);
 			return 'ERRORCHECKFAIL';
 		}
-		
+
 		$data = array(
 			'VPSProtocol'        => 2.23,
 			'TxType'             => 'PAYMENT',
@@ -147,7 +147,7 @@ class SagePay {
 			'ApplyAVSCV2'        => $this->ApplyAVSCV2,
 			'Apply3DSecure'      => $this->Apply3DSecure
 		);
-		
+
 		if (sizeof($this->Basket)) {
 			$data['Basket'] = count($this->Basket);
 			foreach($this->Basket as $line) {
@@ -159,16 +159,16 @@ class SagePay {
 				$data['Basket'] .= ':' . number_format(($line['quantity'] * ($line['value'] + $line['tax'])), 2, '.', '');
 			}
 		}
-		
+
 		$this->result = $this->requestPost($this->urls['register'], $this->formatData($data));
-		
+
 		if (in_array($this->result['Status'], array('INVALID', 'MALFORMED', 'REJECTED', 'NOTAUTHED', 'ERROR'))) {
 			$this->result['Errors'] = array();
-			foreach(split("\n", $this->result['StatusDetail']) as $error) {
+			foreach(explode("\n", $this->result['StatusDetail']) as $error) {
 				$this->result['Errors'] = array_merge($this->result['Errors'], $this->getError($error));
 			}
 		}
-		
+
 		// unset the card details, as we're either complete,
 		// or we're at 3dsecure, in any case, they're not needed
 		// anymore, and in the case of 3dsecure, the instance will
@@ -176,15 +176,15 @@ class SagePay {
 		unset($this->CardNumber);
 		unset($this->CardHolder);
 		unset($this->CV2);
-		
+
 		if ($this->result['Status'] == '3DAUTH') {
 			$_SESSION['sagepay_obj'] = serialize($this);
 		}
-		
+
 		return $this->result['Status'];
-		
+
 	}
-	
+
 	public function addLine($description, $quantity, $value, $tax=0) {
 		$this->Basket[] = array(
 			'description'  => $description,
@@ -193,13 +193,13 @@ class SagePay {
 			'tax'          => $tax
 		);
 	}
-	
+
 	public static function recover3d() {
 		$sagepay = unserialize($_SESSION['sagepay_obj']);
 		unset($_SESSION['sagepay_obj']);
 		return $sagepay;
 	}
-	
+
 	public static function is3dResponse() {
 		if (isset($_REQUEST['PaRes']) and isset($_REQUEST['MD']) and isset($_SESSION['sagepay_obj'])) {
 			return true;
@@ -207,31 +207,31 @@ class SagePay {
 			return false;
 		}
 	}
-	
+
 	public function complete3d() {
 		$data = array(
 			'PARes' => $_REQUEST['PaRes'],
 			'MD'    => $_REQUEST['MD']
 		);
-		
+
 		$result = $this->requestPost($this->urls['3dsecure'], $this->formatData($data));
 		$this->result = $result;
 		return $this->result['Status'];
-		
+
 	}
-	
+
 	public function status() {
 		return $this->result['Status'];
 	}
-	
+
 	private function getError($message) {
-		$chunks = split(' : ', $message, 2);
+		$chunks = explode(' : ', $message, 2);
 		if ($chunks[0] == '3048') { return array('CardNumber' => 'The card number is invalid.'); }
 		if ($chunks[0] == '4022') { return array('CardNumber' => 'The card number is not valid for the card type selected.'); }
 		if ($chunks[0] == '4023') { return array('CardNumber' => 'The issue number must be provided.'); }
 		return array($message);
 	}
-	
+
 	/*
 	 * Send a post request with cURL
 	 * $url = URL to send reuqest to
@@ -241,15 +241,15 @@ class SagePay {
 	private function requestPost($url, $data){
 		set_time_limit(60);
 		$output = array();
-		$curlSession = curl_init();	
+		$curlSession = curl_init();
 		curl_setopt ($curlSession, CURLOPT_URL, $url);
 		curl_setopt ($curlSession, CURLOPT_HEADER, 0);
 		curl_setopt ($curlSession, CURLOPT_POST, 1);
 		curl_setopt ($curlSession, CURLOPT_POSTFIELDS, $data);
-		curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, 1); 
-		curl_setopt($curlSession, CURLOPT_TIMEOUT, 30); 
+		curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curlSession, CURLOPT_TIMEOUT, 30);
 		curl_setopt($curlSession, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curlSession, CURLOPT_SSL_VERIFYHOST, 2);	
+		curl_setopt($curlSession, CURLOPT_SSL_VERIFYHOST, 2);
 		$response = explode(chr(10), curl_exec($curlSession));
 		if (curl_error($curlSession)){
 			$output['Status'] = "FAIL";
@@ -262,7 +262,7 @@ class SagePay {
 		}
 		return $output;
 	}
-	
+
 	/*
 	 * Format data for sending in POST request
 	 * $data = data as an associative array
@@ -276,7 +276,7 @@ class SagePay {
 		$output = substr($output,1);
 		return $output;
 	}
-	
+
 	public static function countries() {
 		return array(
 			'AF' => 'Afghanistan',
