@@ -18,24 +18,50 @@ if (SagePay::is3dResponse()) {
 }
 
 elseif ($_POST) {
-	
+
+	/**
+	 * All the below fields are required for successful submission
+	 * to sage pay.
+	 **/
+
 	$sagepay->VendorTxCode = '000001';
 	$sagepay->Amount       = 10;
 	$sagepay->Currency     = 'GBP';
 	$sagepay->Description  = 'Basket Contents';
 
+	// Get test card details here...
+	// http://www.sagepay.co.uk/support/12/36/test-card-details-for-your-test-transactions
 	$sagepay->CardHolder   = 'Mr John Doe';
-	$sagepay->CardNumber   = '4929000000006';
-	...
+	$sagepay->CardNumber   = '';
+    $sagepay->ExpiryDate   = '';
+    $sagepay->CV2          = '';
+    $sagepay->CardType     = '';
+
+
+    $sagepay->BillingSurname        = '';
+    $sagepay->BillingFirstnames     = '';
+    $sagepay->BillingAddress1       = '';
+    $sagepay->BillingCity           = '';
+    $sagepay->BillingPostCode       = '';
+    $sagepay->BillingCountry        = '';
+    $sagepay->DeliverySurname       = '';
+    $sagepay->DeliveryFirstnames    = '';
+    $sagepay->DeliveryAddress1      = '';
+    $sagepay->DeliveryFirstnames    = '';
+    $sagepay->DeliveryCity          = '';
+    $sagepay->DeliveryPostCode      = '';
+    $sagepay->DeliveryCountry       = '';
+
+
 
 	foreach ($basket_contents as $line_item) {
 		$sagepay->addLine($line_item['name'], $line_item['quantity'], $line_item['value'], $line_item['tax']);
 	}
-	
+
 	$sagepay->register();
-	
+
 }
-	
+
 if ($sagepay->status() == 'OK') {
 	// The order has been completed.
 	echo "Payment complete. See details:\n";
@@ -45,7 +71,7 @@ if ($sagepay->status() == 'OK') {
 elseif ($sagepay->status() == '3DAUTH') {
 	// Any data that needs to persist through 3DAUTH can be added to the object
 	$sagepay->basket = $basket;
-	
+
 	// POST to ACSURL - usually by outputting a auto-submitting form
 	?>
 	<form action="<?=$sagepay->result['ACSURL']?>" method="post">
