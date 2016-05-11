@@ -21,7 +21,7 @@ elseif ($_POST) {
 
 	/**
 	 * All the below fields are required for successful submission
-	 * to sage pay.
+	 * to Sagepay.
 	 **/
 
 	// VendorTxCode must be a unique id on each submission,
