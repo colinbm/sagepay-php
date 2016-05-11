@@ -11,31 +11,31 @@ Usage example:
 $sagepay = new SagePay('vendorid', 'live');
 
 if (SagePay::is3dResponse()) {
-	$sagepay = SagePay::recover3d();
-	$sagepay->complete3d();
-	// recover persistent data - see below
-	$basket = $sagepay->basket;
+  $sagepay = SagePay::recover3d();
+  $sagepay->complete3d();
+  // recover persistent data - see below
+  $basket = $sagepay->basket;
 }
 
 elseif ($_POST) {
 
-	/**
-	 * All the below fields are required for successful submission
-	 * to Sagepay.
-	 **/
+  /**
+   * All the below fields are required for successful submission
+   * to Sagepay.
+   **/
 
-	// VendorTxCode must be unique per successful transaction. Its purpose
-	// is to link your record of the charge and the Sagepay transaction.
-	$sagepay->VendorTxCode = '0001';
+  // VendorTxCode must be unique per successful transaction. Its purpose
+  // is to link your record of the charge and the Sagepay transaction.
+  $sagepay->VendorTxCode = '0001';
 
-	$sagepay->Amount       = 10;
-	$sagepay->Currency     = 'GBP';
-	$sagepay->Description  = 'Basket Contents';
+  $sagepay->Amount       = 10;
+  $sagepay->Currency     = 'GBP';
+  $sagepay->Description  = 'Basket Contents';
 
-	// Get test card details here...
-	// http://www.sagepay.co.uk/support/12/36/test-card-details-for-your-test-transactions
-	$sagepay->CardHolder   = 'Mr John Doe';
-	$sagepay->CardNumber   = '';
+  // Get test card details here...
+  // http://www.sagepay.co.uk/support/12/36/test-card-details-for-your-test-transactions
+  $sagepay->CardHolder   = 'Mr John Doe';
+  $sagepay->CardNumber   = '';
     $sagepay->ExpiryDate   = '';
     $sagepay->CV2          = '';
     $sagepay->CardType     = '';
@@ -57,37 +57,37 @@ elseif ($_POST) {
 
 
 
-	foreach ($basket_contents as $line_item) {
-		$sagepay->addLine($line_item['name'], $line_item['quantity'], $line_item['value'], $line_item['tax']);
-	}
+  foreach ($basket_contents as $line_item) {
+    $sagepay->addLine($line_item['name'], $line_item['quantity'], $line_item['value'], $line_item['tax']);
+  }
 
-	$sagepay->register();
+  $sagepay->register();
 
 }
 
 if ($sagepay->status() == 'OK') {
-	// The order has been completed.
-	echo "Payment complete. See details:\n";
-	print_r($sagepay->result);
+  // The order has been completed.
+  echo "Payment complete. See details:\n";
+  print_r($sagepay->result);
 }
 
 elseif ($sagepay->status() == '3DAUTH') {
-	// Any data that needs to persist through 3DAUTH can be added to the object
-	$sagepay->basket = $basket;
+  // Any data that needs to persist through 3DAUTH can be added to the object
+  $sagepay->basket = $basket;
 
-	// POST to ACSURL - usually by outputting a auto-submitting form
-	?>
-	<form action="<?=$sagepay->result['ACSURL']?>" method="post">
-		<input type="hidden" name="PaReq" value="<?=$sagepay->result['PAReq']?>" />
-		<input type="hidden" name="MD" value="<?=$sagepay->result['MD']?>" />
-		<input type="hidden" name="TermUrl" value="http://full.path.to/this/page" />
-		<input type="submit" value="Continue to Card Verification" />
-	</form>
-	<?php
+  // POST to ACSURL - usually by outputting a auto-submitting form
+  ?>
+  <form action="<?=$sagepay->result['ACSURL']?>" method="post">
+    <input type="hidden" name="PaReq" value="<?=$sagepay->result['PAReq']?>" />
+    <input type="hidden" name="MD" value="<?=$sagepay->result['MD']?>" />
+    <input type="hidden" name="TermUrl" value="http://full.path.to/this/page" />
+    <input type="submit" value="Continue to Card Verification" />
+  </form>
+  <?php
 }
 
 else {
-	echo "Errors:\n";
-	print_r($sagepay->result['Errors']);
+  echo "Errors:\n";
+  print_r($sagepay->result['Errors']);
 }
 ```
