@@ -24,9 +24,9 @@ elseif ($_POST) {
 	 * to Sagepay.
 	 **/
 
-	// VendorTxCode must be a unique id on each submission,
-	// change 'sp' to whatever prefix you want.
-	$sagepay->VendorTxCode = uniqid('sp_');
+	// VendorTxCode must be unique per successful transaction. Its purpose
+	// is to link your record of the charge and the Sagepay transaction.
+	$sagepay->VendorTxCode = '0001';
 
 	$sagepay->Amount       = 10;
 	$sagepay->Currency     = 'GBP';
